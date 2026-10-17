@@ -2,7 +2,8 @@ name: Deploy GitHub Pages
 
 # One Pages artifact, two versions:
 #   /           production, always built from main
-#   /concept-e/ Concept E preview, always taken from concept-e-guided-workflow (separate subdirectory)
+#   /concept-e/ Concept E preview from concept-e-guided-workflow when assembly succeeds.
+#   A missing branch or a failed preview assembly does not block the production artifact.
 # This workflow runs from main. Pushes to concept-e-guided-workflow re-run it via workflow_dispatch
 # (see that branch's trigger-pages.yml), so branch code can never be deployed over the production root.
 on:
@@ -46,9 +47,15 @@ jobs:
           echo "production commit: $(git rev-parse HEAD)"
           if git fetch --depth=1 origin "$PREVIEW_BRANCH"; then
             echo "concept-e commit:  $(git rev-parse FETCH_HEAD)"
-            mkdir -p ../_preview-src
-            git archive FETCH_HEAD cog-refinements | tar -x -C ../_preview-src
-            bash .github/scripts/assemble-pages.sh ../_preview-src dist
+            rm -rf ../_preview-src
+            if mkdir -p ../_preview-src \
+              && git archive FETCH_HEAD cog-refinements | tar -x -C ../_preview-src \
+              && bash .github/scripts/assemble-pages.sh ../_preview-src dist; then
+              echo "Concept E preview assembled"
+            else
+              echo "::warning::Concept E preview assembly failed - deploying production only"
+              rm -rf dist/concept-e
+            fi
           else
             echo "::warning::branch $PREVIEW_BRANCH not found - deploying production only"
           fi

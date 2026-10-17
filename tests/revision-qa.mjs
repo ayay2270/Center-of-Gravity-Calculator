@@ -79,7 +79,7 @@ export async function runRevisionQA(tab,capture=async()=>{}) {
   }
   await reset();
   await tab.playwright.getByRole('button',{name:/計算過程/}).click();
-  for(const [angle,margin,passes,wording] of [[21.6,'+0.4°',true,'距規格上限尚有 0.4°'],[22,'0.0°',true,'距規格上限尚有 0.0°'],[22.4,'-0.4°',false,'超過規格上限 0.4°']]){
+  for(const angle of [21.6,22,22.4]){
     await set('棧板寬度',2*1377*Math.tan(angle*Math.PI/180));
     const status=await tab.playwright.evaluate(()=>{
       const card=document.querySelector('[data-testid="spec-status-card"]'),design=card;
@@ -87,14 +87,14 @@ export async function runRevisionQA(tab,capture=async()=>{}) {
       const signed=Number(amount)===0?'0.0':(card.classList.contains('pass')?'+':'-')+amount;
       return {angle:document.querySelector('[data-testid="critical-angle"]').textContent,margin:signed+'°',wording:gap,pass:!card.classList.contains('fail'),color:getComputedStyle(card).color,designPass:design.classList.contains('pass'),designText:document.querySelector('[data-testid="design-status"]').textContent,designColor:getComputedStyle(design).color,current:document.querySelector('[data-testid="current-status"]').textContent};
     });
-    check(status.angle===`${angle.toFixed(1)}°`&&status.margin===margin,`${angle}° evaluated: one-decimal critical angle and signed difference`);
-    check(status.wording===wording&&status.pass===passes&&status.color===(passes?'rgb(33, 107, 85)':'rgb(179, 50, 43)'),`${angle}° evaluated: correct upper-limit wording and green/red margin`);
-    check(status.designPass===passes&&status.designText===(passes?'符合規格':'超過規格')&&status.designColor===(passes?'rgb(33, 107, 85)':'rgb(179, 50, 43)'),`${angle}° evaluated: correct PASS/FAIL design status and color`);
+    check(status.angle===`${angle.toFixed(1)}°`&&status.margin==='+6.0°',`${angle}° critical: specification margin stays 22° − 16°`);
+    check(status.wording==='距規格上限尚有 6.0°'&&status.pass&&status.color==='rgb(33, 107, 85)',`${angle}° critical: current 16° tilt still passes the 22° limit`);
+    check(status.designPass&&status.designText==='目前傾角符合規格'&&status.designColor==='rgb(33, 107, 85)',`${angle}° critical: specification PASS follows tilt, not critical angle`);
     check(status.current==='未達臨界角',`${angle}° evaluated: current 16° physical state stays independent`);
     await tab.playwright.getByRole('button',{name:/計算過程/}).click();
     inspect(await geometry(),16);
     const conclusion=await tab.playwright.locator('.calculation-card:last-child').innerText();
-    check(conclusion.includes(margin)&&conclusion.includes(angle===22?'剛好達到 22° 規格上限':passes?'未超過 22° 規格上限':'已超過 22° 規格上限'),`${angle}° evaluated: expanded calculation conclusion uses the same upper-limit rule`);
+    check(conclusion.includes('+6.0°')&&conclusion.includes('目前傾角未超過 22° 規格上限'),`${angle}° critical: expanded conclusion uses the tilt upper-limit rule`);
     await capture(`status-${angle}`,tab);
     await tab.playwright.getByRole('button',{name:/計算過程/}).click();
   }

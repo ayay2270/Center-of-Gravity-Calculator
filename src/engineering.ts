@@ -22,8 +22,6 @@ export function calculate(parameters:Parameters) {
   const halfWidth = palletWidth / 2;
   const distance = halfWidth - x;
   const criticalAngle = Math.atan(distance / z) * 180 / Math.PI;
-  const margin = specLimitAngle - criticalAngle;
-  const specStatus = Math.abs(margin) <= 1e-8 ? 'boundary' : margin > 0 ? 'pass' : 'fail';
   const requiredHalfWidth = z * Math.tan(radians(specLimitAngle)) + x;
   const preciseRequiredWidth = 2 * requiredHalfWidth;
   const recommendedHalfWidth = Math.max(0, Math.ceil((requiredHalfWidth - 1e-9) / 10) * 10);
@@ -31,14 +29,32 @@ export function calculate(parameters:Parameters) {
   const delta = tilt - criticalAngle;
   const stability:Stability = Math.abs(delta) <= 1e-8 ? 'critical' : delta < 0 ? 'stable' : 'exceeded';
   const gravityOffset = -distance * Math.cos(radians(tilt)) + z * Math.sin(radians(tilt));
-  // The editable specification upper limit is independent of physical tipping.
-  return {z,x,halfWidth,distance,criticalAngle,margin,specStatus,requiredHalfWidth,preciseRequiredWidth,recommendedHalfWidth,recommendedWidth,stability,gravityOffset,meetsRequirement:specStatus !== 'fail'};
+  // specLimitAngle only sizes the width. Specification pass/fail is compareSpecification().
+  return {z,x,halfWidth,distance,criticalAngle,requiredHalfWidth,preciseRequiredWidth,recommendedHalfWidth,recommendedWidth,stability,gravityOffset};
 }
 export const formatDifference=(difference:number)=>{
   const rounded=Number(difference.toFixed(1));
   return rounded===0?'0.0':`${rounded>0?'+':''}${rounded.toFixed(1)}`;
 };
+export const formatGap=(difference:number)=>{
+  const magnitude=Math.abs(difference);
+  if(magnitude>1e-8 && Number(magnitude.toFixed(1))===0) return '< 0.1';
+  return magnitude.toFixed(1);
+};
 export const formatAngleLabel=(angle:number)=>Number.isInteger(angle)?String(angle):angle.toFixed(1);
+// One decimal by default. A real difference hidden by that rounding uses two decimals.
+export function formatAngleComparison(left:number,right:number){
+  const equal=Math.abs(left-right)<=1e-8;
+  const digits=!equal&&left.toFixed(1)===right.toFixed(1)?2:1;
+  const operator=equal?'=':left<right?'<':'>';
+  return `${left.toFixed(digits)}° ${operator} ${right.toFixed(digits)}°`;
+}
+export function formatHeadlineAngles(values:number[]){
+  const one=values.map(value=>value.toFixed(1));
+  const extra=values.map(()=>false);
+  for(let i=0;i<values.length;i++)for(let j=i+1;j<values.length;j++)if(Math.abs(values[i]-values[j])>1e-8&&one[i]===one[j])extra[i]=extra[j]=true;
+  return values.map((value,index)=>value.toFixed(extra[index]?2:1));
+}
 export type Calculation = ReturnType<typeof calculate>;
 export interface Point {x:number; z:number}
 // Local coordinates use the upright floor as z=0. Right lower pallet edge is the pivot.
