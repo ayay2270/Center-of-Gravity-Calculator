@@ -1,10 +1,10 @@
-# Center of Gravity Calculator V2
+# Center of Gravity Calculator
 
 桌面導向的 2D 重心 / 翻覆穩定性工程計算工具，用於快速評估機櫃與棧板系統向右側的靜態翻覆穩定性。
 
 ## Online Demo
 
-[開啟線上計算機](https://ayay2270.github.io/Center-of-Gravity-Calculator-V2/)
+[開啟線上計算機](https://ayay2270.github.io/Center-of-Gravity-Calculator/)
 
 ## 主要功能
 
@@ -113,4 +113,4 @@ npm run preview
 
 更新 `main` 後，GitHub Actions 會自動執行依賴安裝、工程測試及建置，再部署至 GitHub Pages；也可手動觸發 workflow。
 
-部署設定位於 `.github/workflows/deploy-pages.yml`，Pages 來源為 **GitHub Actions**。本機開發、建置與預覽使用 `/`，Actions 建置使用 `/Center-of-Gravity-Calculator-V2/`。
+部署設定位於 `.github/workflows/deploy-pages.yml`，Pages 來源為 **GitHub Actions**。本機開發、建置與預覽使用 `/`，Actions 建置使用 `/Center-of-Gravity-Calculator/`。
