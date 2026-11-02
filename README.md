@@ -4,7 +4,11 @@
 
 ## Online Demo
 
-[開啟線上計算機](https://ayay2270.github.io/Center-of-Gravity-Calculator/)
+**正式網址（Cloudflare Pages）：<https://center-of-gravity-calculator.pages.dev/>**
+
+[開啟線上計算機](https://center-of-gravity-calculator.pages.dev/)
+
+備用部署（GitHub Pages）：<https://ayay2270.github.io/Center-of-Gravity-Calculator/>
 
 ## 主要功能
 
@@ -111,6 +115,38 @@ npm run preview
 
 ## 部署
 
+本專案同時部署在兩個位置：Cloudflare Pages 為主要網址，GitHub Pages 為次要（備用）部署。
+
+### Cloudflare Pages（主要）
+
+正式網址：<https://center-of-gravity-calculator.pages.dev/>
+
+使用 Cloudflare 傳統 Pages（Git 連線）部署，無需 wrangler 或額外設定檔。Cloudflare 儀表板設定如下：
+
+| 項目 | 設定 |
+| --- | --- |
+| Framework preset | None（或 Vite） |
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Production branch | `main` |
+
+- 自動部署：推送（push）到 `main` 後，Cloudflare 會自動重新建置並部署；其他分支則產生預覽部署。
+- Node 版本：專案根目錄的 `.node-version` 指定 Node 22。若建置因 Node 版本失敗，請在 Pages 專案的 **Settings → Variables and Secrets**（Production 與 Preview）新增環境變數 `NODE_VERSION=22`，再重新部署。
+- Cloudflare 建置不會設定 `GITHUB_ACTIONS`，因此 Vite 使用 `/` 為 base，網站位於網域根目錄。
+
+自訂網域（選用）：
+
+1. 在 Cloudflare 儀表板開啟 **Workers & Pages**，選擇本專案。
+2. 進入 **Custom domains** → **Set up a custom domain**。
+3. 輸入網域（例如 `cog.example.com`）並依指示確認。若網域的 DNS 在 Cloudflare，會自動建立 CNAME 紀錄；若在其他 DNS 供應商，請手動新增 CNAME 指向 `center-of-gravity-calculator.pages.dev`。
+4. 等待網域驗證與 SSL 憑證簽發完成後即可使用。
+
+### GitHub Pages（次要）
+
+備用網址：<https://ayay2270.github.io/Center-of-Gravity-Calculator/>
+
 更新 `main` 後，GitHub Actions 會自動執行依賴安裝、工程測試及建置，再部署至 GitHub Pages；也可手動觸發 workflow。
 
 部署設定位於 `.github/workflows/deploy-pages.yml`，Pages 來源為 **GitHub Actions**。本機開發、建置與預覽使用 `/`，Actions 建置使用 `/Center-of-Gravity-Calculator/`。
+
+`/concept-e/`（Concept E 預覽）僅存在於 GitHub Pages，由該 workflow 組裝；Cloudflare Pages 不包含此路徑。
